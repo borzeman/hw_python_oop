@@ -1,22 +1,24 @@
+from dataclasses import dataclass
+from abc import abstractmethod
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-    def __init__(self,
-                 training_type: str,
-                 duration: float,
-                 distance: float,
-                 speed: float,
-                 calories: float) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
+
+    message = (
+        'Тип тренировки: {training_type}; '
+        'Длительность: {duration:.3f} ч.; '
+        'Дистанция: {distance:.3f} км; Ср. скорость: '
+        '{speed:.3f} км/ч; Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; Ср. скорость: '
-                f'{self.speed:.3f} км/ч; Потрачено ккал: {self.calories:.3f}.')
+        return self.message.format(**self.__dict__)
 
 
 class Training:
@@ -38,31 +40,29 @@ class Training:
 
     def training_time_in_minutes(self) -> int:
         """Получить время тренировки в минутах."""
-        minutes = self.duration * self.MIN_IN_HOUR
-        return minutes
+        return self.duration * self.MIN_IN_HOUR
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-        distance = self.action * self.LEN_STEP / self.M_IN_KM
-        return distance
+        return self.action * self.LEN_STEP / self.M_IN_KM
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
         return self.get_distance() / self.duration
 
+    @abstractmethod
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий.
         метод неопределен, потому что у каждого класса он свой"""
-        pass
+        raise NotImplementedError('Реализация метода отсутсвует!')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        message = InfoMessage(self.__class__.__name__,
-                              self.duration,
-                              self.get_distance(),
-                              self.get_mean_speed(),
-                              self.get_spent_calories())
-        return message
+        return InfoMessage(self.__class__.__name__,
+                           self.duration,
+                           self.get_distance(),
+                           self.get_mean_speed(),
+                           self.get_spent_calories())
 
 
 class Running(Training):
@@ -120,9 +120,8 @@ class Swimming(Training):
 
     def get_mean_speed(self) -> float:
         """"Переопределенный метод расчёта средней скорости для плавания."""
-        mean_speed = (self.length_pool * self.count_pool
-                      / super().M_IN_KM / self.duration)
-        return mean_speed
+        return (self.length_pool * self.count_pool
+                / super().M_IN_KM / self.duration)
 
     def get_spent_calories(self) -> float:
         """"Переопределенный метод расчёта затраченных калорий для плавания"""
@@ -140,7 +139,9 @@ def read_package(workout_type: str, data: list) -> Training:
                     'WLK': SportsWalking}
     if workout_type in training_dct.keys():
         return training_dct.get(workout_type)(*data)
-    return None
+    existing_trains = training_dct.keys()  # существующие тренировки
+    raise ValueError('Неверный код тренировки, '
+                     f'допустимые значения: {existing_trains}.')
 
 
 def main(training: Training) -> None:
@@ -153,7 +154,7 @@ if __name__ == '__main__':
     packages = [
         ('SWM', [720, 1, 80, 25, 40]),
         ('RUN', [15000, 1, 75]),
-        ('WLK', [9000, 1, 75, 180]),
+        ('WLK', [9000, 1, 75, 180])
     ]
 
     for workout_type, data in packages:
