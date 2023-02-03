@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from abc import abstractmethod
 
 
 @dataclass
@@ -50,7 +49,6 @@ class Training:
         """Получить среднюю скорость движения."""
         return self.get_distance() / self.duration
 
-    @abstractmethod
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий.
         метод неопределен, потому что у каждого класса он свой"""
@@ -72,12 +70,11 @@ class Running(Training):
 
     def get_spent_calories(self) -> float:
         """Переопределённый метод расчёта калорий для бега."""
-        kkal: float = ((self.CALORIES_MEAN_SPEED_MULTIPLIER
-                       * super().get_mean_speed()
-                       + self.CALORIES_MEAN_SPEED_SHIFT)
-                       * self.weight / super().M_IN_KM
-                       * super().training_time_in_minutes())
-        return kkal
+        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER
+                * super().get_mean_speed()
+                + self.CALORIES_MEAN_SPEED_SHIFT)
+                * self.weight / super().M_IN_KM
+                * super().training_time_in_minutes())
 
 
 class SportsWalking(Training):
@@ -98,12 +95,11 @@ class SportsWalking(Training):
 
     def get_spent_calories(self) -> float:
         """Переопределенный метод подсчёта калорий."""
-        kkal: float = ((self.CALORIES_MEAN_SPEED_MULTIPLIER
-                       * self.weight + ((super().get_mean_speed()
-                        * self.KMH_TO_MPS) ** 2 / self.height_in_m())
-                       * self.CALORIES_MEAN_SPEED_SHIFT * self.weight)
-                       * super().training_time_in_minutes())
-        return kkal
+        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER
+                * self.weight + ((super().get_mean_speed()
+                 * self.KMH_TO_MPS) ** 2 / self.height_in_m())
+                * self.CALORIES_MEAN_SPEED_SHIFT * self.weight)
+                * super().training_time_in_minutes())
 
 
 class Swimming(Training):
@@ -125,11 +121,10 @@ class Swimming(Training):
 
     def get_spent_calories(self) -> float:
         """"Переопределенный метод расчёта затраченных калорий для плавания"""
-        kkal: float = ((self.get_mean_speed()
-                       + self.CALORIES_MEAN_SPEED_MULTIPLIER)
-                       * self.CALORIES_MEAN_SPEED_SHIFT
-                       * self.weight * self.duration)
-        return kkal
+        return ((self.get_mean_speed()
+                + self.CALORIES_MEAN_SPEED_MULTIPLIER)
+                * self.CALORIES_MEAN_SPEED_SHIFT
+                * self.weight * self.duration)
 
 
 def read_package(workout_type: str, data: list) -> Training:
@@ -139,9 +134,8 @@ def read_package(workout_type: str, data: list) -> Training:
                     'WLK': SportsWalking}
     if workout_type in training_dct.keys():
         return training_dct.get(workout_type)(*data)
-    existing_trains = training_dct.keys()  # существующие тренировки
     raise ValueError('Неверный код тренировки, '
-                     f'допустимые значения: {existing_trains}.')
+                     f'допустимые значения: {list(training_dct.keys())}.')
 
 
 def main(training: Training) -> None:
